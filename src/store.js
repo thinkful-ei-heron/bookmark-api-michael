@@ -4,7 +4,7 @@ bookmarks = [
     title: 'Example bookmark',
     url: 'https://example.com',
     description: 'This is an example bookmark',
-    ratign: 5
+    rating: 5
   }
 ];
 

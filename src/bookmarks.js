@@ -1,15 +1,18 @@
 const express = require('express');
 const uuid = require('uuid/v4');
 const logger = require('./logger');
-const { bookmarks } = require('./store');
+const { bookmarks, db } = require('./store');
+const BookmarksService = require('./bookmarks-service');
+
+const bodyParser = express.json();
 
 const router = express.Router();
-const bodyParser = express.json();
 
 router
   .route('/bookmarks')
   .get((req, res) => {
-    res.json(bookmarks);
+    const db = req.app.get('db');
+    BookmarksService.getAllBookmarks(db).then(all => res.json(all));
   })
   .post(bodyParser, (req, res) => {
     const { title, url, description, rating } = req.body;
