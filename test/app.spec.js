@@ -3,6 +3,7 @@ const knex = require('knex');
 const logger = require('../src/logger');
 
 const {
+  addNullDescription,
   seedBookmarks,
   testBookmarks,
   sanitize
@@ -111,8 +112,49 @@ describe('App', () => {
         .send({ ...bookmark, rating: 6 })
         .set('Authorization', auth)
         .expect(400, {
-          error: { message: "'rating' must be a number between 1 and 5" }
+          error: { message: `'rating' must be a number between 1 and 5` }
         });
+    });
+  });
+
+  describe('DELETE /bookmarks/:id', () => {
+    beforeEach('insert bookmarks', () => seedBookmarks(db));
+
+    it('Given a valid ID, responds with 204', () => {
+      const id = 2;
+      return supertest(app)
+        .delete(`/bookmarks/${id}`)
+        .set('Authorization', auth)
+        .expect(204);
+    });
+
+    it('Given a valid ID, removes the matching bookmark from the database', () => {
+      const id = 2;
+      const expected = testBookmarks.filter(bm => bm.id !== id);
+      return supertest(app)
+        .delete(`/bookmarks/${id}`)
+        .set('Authorization', auth)
+        .then(() => db('bookmarks').select('*'))
+        .then(actual => expect(actual).to.eql(expected));
+    });
+
+    it('Given an invalid ID, responds with 404', () => {
+      const id = -1;
+      return supertest(app)
+        .delete(`/bookmarks/${id}`)
+        .set('Authorization', auth)
+        .expect(404);
+    });
+
+    it('Given an invalid ID, does not modify the database', () => {
+      const id = -1;
+      return supertest(app)
+        .delete(`/bookmarks/${id}`)
+        .set('Authorization', auth)
+        .then(() => db('bookmarks').select('*'))
+        .then(actual =>
+          expect(actual).to.eql(testBookmarks.map(addNullDescription))
+        );
     });
   });
 });

@@ -107,16 +107,30 @@ router
   })
   .delete((req, res) => {
     const { id } = req.params;
-    const index = bookmarks.findIndex(bm => bm.id == id);
-    if (index === -1) {
-      logger.error(`Attempt to delete bookmark with invalid ID (${id})`);
-      return res.status(404).json({
-        error: { message: `Bookmark doesn't exist` }
-      });
-    }
-    bookmarks.splice(index, 1);
-    logger.info(`Deleted card with id ${id}`);
-    res.status(204).end();
+    const db = req.app.get('db');
+
+    BookmarksService.deleteBookmark(db, id).then(rowNum => {
+      if (rowNum !== 0) {
+        logger.info(`Deleted bookmark with id ${id}`);
+        res.status(204).end();
+      } else {
+        logger.warn(
+          `Attempt to delete bookmark with id ${id} deleted ${rowNum} rows`
+        );
+        res.status(404).end();
+      }
+    });
+
+    // const index = bookmarks.findIndex(bm => bm.id == id);
+    // if (index === -1) {
+    //   logger.error(`Attempt to delete bookmark with invalid ID (${id})`);
+    //   return res.status(404).json({
+    //     error: { message: `Bookmark doesn't exist` }
+    //   });
+    // }
+    // bookmarks.splice(index, 1);
+    // logger.info(`Deleted card with id ${id}`);
+    // res.status(204).end();
   });
 
 module.exports = router;
