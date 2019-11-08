@@ -2,12 +2,13 @@ const BookmarksService = require('../src/bookmarks-service');
 const knex = require('knex');
 const {
   addNullDescription,
-  makeBookmarksArray
+  seedBookmarks,
+  testBookmarks
 } = require('./bookmarks.fixtures');
 
 describe(`Bookmarks service object`, function() {
   let db;
-  let testBookmarks = makeBookmarksArray();
+
   before('establish knex instance', () => {
     db = knex({ client: 'pg', connection: process.env.TEST_DB_URL });
   });
@@ -19,14 +20,7 @@ describe(`Bookmarks service object`, function() {
   after('clean up', () => db.destroy());
 
   context(`Given 'bookmarks' has data`, () => {
-    beforeEach(() => {
-      return db('bookmarks').insert(
-        testBookmarks.map(bm => {
-          const { id, ...rest } = bm; //avoid issues with auto id not incrementing
-          return rest;
-        })
-      );
-    });
+    beforeEach('insert bookmarks', () => seedBookmarks(db));
 
     it(`getAllBookmarks() resolves all bookmarks`, () => {
       return BookmarksService.getAllBookmarks(db).then(actual => {
